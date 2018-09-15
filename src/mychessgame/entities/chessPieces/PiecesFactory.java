@@ -39,5 +39,26 @@ public class PiecesFactory {
         }
         
     }
+    public ChessPiece promotePiece(ChessPiece piece)
+    {
+        if(piece.getColor()==PieceColor.WHITE)
+        {
+            if(piece instanceof Pawn)return new Rook(PieceColor.WHITE,Assets.wRook,1,piece.getX(),piece.getY(),piece.getWidth(),piece.getHeight());
+            else if(piece instanceof Rook)return new Knight(PieceColor.WHITE,Assets.wKnight,2,piece.getX(),piece.getY(),piece.getWidth(),piece.getHeight());
+            else if(piece instanceof Knight)return new Bishop(PieceColor.WHITE,Assets.wBishop,3,piece.getX(),piece.getY(),piece.getWidth(),piece.getHeight());
+            else if(piece instanceof Bishop)return new Queen(PieceColor.WHITE,Assets.wQueen,5,piece.getX(),piece.getY(),piece.getWidth(),piece.getHeight());
+            else if(piece instanceof Queen)return new Rook(PieceColor.WHITE,Assets.wRook,1,piece.getX(),piece.getY(),piece.getWidth(),piece.getHeight());
+        }
+        else if(piece.getColor()==PieceColor.BLACK)
+        {
+            if(piece instanceof Pawn)return new Rook(PieceColor.BLACK,Assets.bRook,7,piece.getX(),piece.getY(),piece.getWidth(),piece.getHeight());
+            else if(piece instanceof Rook)return new Knight(PieceColor.BLACK,Assets.bKnight,8,piece.getX(),piece.getY(),piece.getWidth(),piece.getHeight());
+            else if(piece instanceof Knight)return new Bishop(PieceColor.BLACK,Assets.bBishop,9,piece.getX(),piece.getY(),piece.getWidth(),piece.getHeight());
+            else if(piece instanceof Bishop)return new Queen(PieceColor.BLACK,Assets.bQueen,11,piece.getX(),piece.getY(),piece.getWidth(),piece.getHeight());
+            else if(piece instanceof Queen)return new Rook(PieceColor.BLACK,Assets.bRook,7,piece.getX(),piece.getY(),piece.getWidth(),piece.getHeight());
+            
+        }
+        return null;
+    }
     
 }
