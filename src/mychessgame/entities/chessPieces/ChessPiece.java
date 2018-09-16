@@ -59,7 +59,7 @@ public class ChessPiece extends Entity{
            this.setFirstMove(false);
        setX(x);
        setY(y);
-   }
+          }
 
     public PieceColor getColor() {
         return color;

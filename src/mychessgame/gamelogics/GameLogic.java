@@ -46,7 +46,23 @@ private boolean whiteKingInCheck=false,blackKingInCheck=false;
      renderLockedFieldbox(g);
      renderWhosTurn(g);
      renderPromotable(g);
+     renderCheck(g);
     
+  }
+  private void renderCheck(Graphics g)
+  {
+      if (whiteKingInCheck)
+      {
+           g.setFont(new Font("TimesRoman", Font.PLAIN, 40));
+          g.setColor(Color.WHITE);
+          g.drawString("White king in check!", 0 ,300);
+      }
+      else if (blackKingInCheck)
+      {
+           g.setFont(new Font("TimesRoman", Font.PLAIN, 40));
+          g.setColor(Color.BLACK);
+          g.drawString("Black king in check!", 0 ,300);
+      }
   }
   private void renderPromotable(Graphics g)
   {
@@ -131,9 +147,10 @@ public void checksForPieceMove(){//first step check for left click on another lo
         
   }
   private void movePiece(Field theSquare){//moving piece from one square to another old piece gets deleted
-     if(positionBlackKing==null||positionWhiteKing==null)
+     if(positionBlackKing==null||positionWhiteKing==null)//init of king position
          this.setKingPositions();
-      this.setAnyKingInCheck();
+     
+    
       
      ChessPiece tmp= theSquare.getPieceOnField();
      if(currentTurn==TURN_WHITE_PLAYER&&tmp.getColor()==PieceColor.WHITE)
@@ -176,7 +193,7 @@ public void checksForPieceMove(){//first step check for left click on another lo
      {
          this.setKingPositions();
      }
-     
+     this.setAnyKingInCheck();
       locked=false;      
         try{Thread.sleep(200);} //short sleep so the left click is not geting recognized as another click again /human speed/
         catch(InterruptedException ex){Thread.currentThread().interrupt();}     
@@ -192,19 +209,24 @@ public void checksForPieceMove(){//first step check for left click on another lo
            for(int x=0;x<handler.getFieldCount();x++)
            {
              if(handler.getPlayboard().getFields()[y][x].getPieceOnField()!=null&&positionBlackKing!=null
-                       &&handler.getPlayboard().getFields()[y][x].getPieceOnField().getColor()==PieceColor.WHITE)
-                       blackKingInCheck=!handler.getPlayboard().getFields()[y][x].getPieceOnField().pieceMoveAndCaptureRule(
-                        (int)positionBlackKing.getX(),(int) positionBlackKing.getY(),handler.getPlayboard().getFields() );
+                       &&handler.getPlayboard().getFields()[y][x].getPieceOnField().getColor()==PieceColor.WHITE){
+                       if(handler.getPlayboard().getFields()[y][x].getPieceOnField().pieceMoveAndCaptureRule(
+                        (int)positionBlackKing.getX(),(int) positionBlackKing.getY(),handler.getPlayboard().getFields())) 
+                       {blackKingInCheck=true;//if any piece sets black king in check we leave the function
+                        return;
+                       }
+             }
              if(handler.getPlayboard().getFields()[y][x].getPieceOnField()!=null&&positionWhiteKing!=null
                        &&handler.getPlayboard().getFields()[y][x].getPieceOnField().getColor()==PieceColor.BLACK)
-                       whiteKingInCheck=!handler.getPlayboard().getFields()[y][x].getPieceOnField().pieceMoveAndCaptureRule(
-                        (int) positionWhiteKing.getX(),(int) positionWhiteKing.getY(),handler.getPlayboard().getFields() );
-             
-             
+                       if(handler.getPlayboard().getFields()[y][x].getPieceOnField().pieceMoveAndCaptureRule(
+                        (int) positionWhiteKing.getX(),(int) positionWhiteKing.getY(),handler.getPlayboard().getFields() ))
+                       {whiteKingInCheck=true;//same as for black king in case any piece sets the king in check we leave the function
+                       return;
+                       }
            }
        }
-       if(blackKingInCheck||whiteKingInCheck)
-       System.out.println("check");
+       blackKingInCheck=whiteKingInCheck=false;//if the for loops run trough and find no piece sets any king in check set to false
+       
     }
     private void setKingPositions(){
          for(int y=0;y<handler.getFieldCount();y++)
@@ -212,13 +234,13 @@ public void checksForPieceMove(){//first step check for left click on another lo
            for(int x=0;x<handler.getFieldCount();x++)
            {
                
-               if(handler.getPlayboard().getFields()[y][x].getPieceOnField()!=null
-                       &&handler.getPlayboard().getFields()[y][x].getPieceOnField() instanceof King)
+               if(handler.getPlayboard().getFields()[x][y].getPieceOnField()!=null
+                       &&handler.getPlayboard().getFields()[x][y].getPieceOnField() instanceof King)
                        {
-                           if(handler.getPlayboard().getFields()[y][x].getPieceOnField().getColor()==PieceColor.BLACK)
+                           if(handler.getPlayboard().getFields()[x][y].getPieceOnField().getColor()==PieceColor.BLACK)
                            {   positionBlackKing=new Point(x,y);
                            System.out.println("Black king set to "+x+"=x "+y+"=y");}
-                           if(handler.getPlayboard().getFields()[y][x].getPieceOnField().getColor()==PieceColor.WHITE)
+                           if(handler.getPlayboard().getFields()[x][y].getPieceOnField().getColor()==PieceColor.WHITE)
                            {  positionWhiteKing=new Point(x,y);
                            System.out.println("White king set to "+x+"=x "+y+"=y");}
                        }
