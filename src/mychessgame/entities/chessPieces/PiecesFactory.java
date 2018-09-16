@@ -39,6 +39,7 @@ public class PiecesFactory {
         }
         
     }
+
     public ChessPiece promotePiece(ChessPiece piece)
     {
         if(piece.getColor()==PieceColor.WHITE)
@@ -60,5 +61,6 @@ public class PiecesFactory {
         }
         return null;
     }
+
     
 }

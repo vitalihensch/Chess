@@ -13,6 +13,7 @@ import mychessgame.playboard.Field;
 
 public class Rook extends ChessPiece {
 
+
 public Rook(PieceColor color,BufferedImage texture,int id,int x,int y,int width,int height) {
         super(color, texture, id,x,y,width,height);
 }
@@ -148,6 +149,6 @@ if(!isPieceInTheWay(mouseOnFieldX,mouseOnFieldY,fields))//if nothing in the way
 
         return false;
     }
-   
+
     
 }

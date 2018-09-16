@@ -258,5 +258,5 @@ public void checksForPieceMove(){//first step check for left click on another lo
     try{Thread.sleep(200);} //short sleep so the left click is not geting recognized as another click again /human speed/
         catch(InterruptedException ex){Thread.currentThread().interrupt();}
     }
-  
+
 }

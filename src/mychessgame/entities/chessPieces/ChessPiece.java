@@ -55,6 +55,7 @@ public class ChessPiece extends Entity{
         return y;
     }
    public void moveTo(int x,int y){
+
        if(this.isFirstMove())
            this.setFirstMove(false);
        setX(x);
@@ -82,5 +83,6 @@ public class ChessPiece extends Entity{
     public int getHeight() {
         return height;
     }
-   
+
+       
 }
