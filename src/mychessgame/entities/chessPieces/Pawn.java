@@ -47,7 +47,12 @@ public class Pawn extends ChessPiece{
                
             
     }
+public boolean isPromoteable()
+{
+    if((this.color==PieceColor.WHITE&&this.getY()/height==0)||(this.color==PieceColor.BLACK&&this.getY()/height==7))
+        return true;
+    return false;
+}
 
-   
-    
+      
 }

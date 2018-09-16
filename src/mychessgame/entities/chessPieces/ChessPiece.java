@@ -55,9 +55,12 @@ public class ChessPiece extends Entity{
         return y;
     }
    public void moveTo(int x,int y){
+
+       if(this.isFirstMove())
+           this.setFirstMove(false);
        setX(x);
        setY(y);
-   }
+          }
 
     public PieceColor getColor() {
         return color;
@@ -72,5 +75,14 @@ public class ChessPiece extends Entity{
    public boolean isFirstMove(){
        return this.firstMove;
    } 
-   
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+       
 }

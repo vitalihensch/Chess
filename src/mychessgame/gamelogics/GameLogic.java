@@ -4,9 +4,14 @@ package mychessgame.gamelogics;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Point;
 import mychessgame.Handler;
 import mychessgame.entities.chessPieces.ChessPiece;
 import mychessgame.entities.chessPieces.ChessPiece.PieceColor;
+import mychessgame.entities.chessPieces.King;
+import mychessgame.entities.chessPieces.Pawn;
+import mychessgame.entities.chessPieces.PiecesFactory;
+import mychessgame.entities.chessPieces.Rook;
 import mychessgame.playboard.Field;
 
 
@@ -17,10 +22,16 @@ private int currentTurn;
 private int mouseOnFieldX, mouseOnFieldY;
 private int lockedX,lockedY;
 private boolean locked;
+private Point promotablePiece,positionBlackKing,positionWhiteKing;
+private boolean whiteKingInCheck=false,blackKingInCheck=false;
+
 
    public GameLogic(Handler handler){
         this.handler=handler;
        currentTurn=TURN_WHITE_PLAYER;
+       
+      
+      
     }
     
     
@@ -34,9 +45,34 @@ private boolean locked;
   public void render(Graphics g){
      renderLockedFieldbox(g);
      renderWhosTurn(g);
+     renderPromotable(g);
+     renderCheck(g);
     
   }
-  
+  private void renderCheck(Graphics g)
+  {
+      if (whiteKingInCheck)
+      {
+           g.setFont(new Font("TimesRoman", Font.PLAIN, 40));
+          g.setColor(Color.WHITE);
+          g.drawString("White king in check!", 0 ,300);
+      }
+      else if (blackKingInCheck)
+      {
+           g.setFont(new Font("TimesRoman", Font.PLAIN, 40));
+          g.setColor(Color.BLACK);
+          g.drawString("Black king in check!", 0 ,300);
+      }
+  }
+  private void renderPromotable(Graphics g)
+  {
+      if(promotablePiece!=null)
+      {
+           g.setFont(new Font("TimesRoman", Font.PLAIN, 40));
+          g.setColor(Color.BLACK);
+          g.drawString("A Pawn reached promotoble Position", 0 ,300);
+      }
+  }
   private void renderWhosTurn(Graphics g)
   {
       g.setFont(new Font("TimesRoman", Font.PLAIN, 40));
@@ -67,8 +103,9 @@ private boolean locked;
         lockedY=mouseOnFieldY;
        
     }
-    else if(handler.getGame().getMouseManager().isRightPressed()&&locked){
-          locked=false;   
+    else if(handler.getGame().getMouseManager().isRightPressed()&&locked){//on right click the locks gets open and also promotable piece gets zeroed out, after this no promotion for same piece anymore
+        promotablePiece=null;  
+        locked=false;   
     
     }
   }
@@ -84,7 +121,16 @@ private boolean locked;
 
 //pieces move and capture logic 
 public void checksForPieceMove(){//first step check for left click on another location then the locked field location
+    
     boolean leftClick=handler.getGame().getMouseManager().isLeftPressed();
+      if(promotablePiece!=null&&leftClick&&//guard against nullpointer exception
+              (currentTurn==TURN_WHITE_PLAYER&&handler.getPlayboard().getFields()[promotablePiece.x][promotablePiece.y].getPieceOnField().getColor()==PieceColor.BLACK
+              ||currentTurn==TURN_BLACK_PLAYER&&handler.getPlayboard().getFields()[promotablePiece.x][promotablePiece.y].getPieceOnField().getColor()==PieceColor.WHITE)//promotion of pieces schould be between the turns 
+              &&mouseOnFieldX==promotablePiece.x&&mouseOnFieldY==promotablePiece.y)//making shure mouse klicking on the piece to promote 
+                {
+                promote();
+                return;
+                }
     
     if(locked&&leftClick&&!handler.getPlayboard().getFields()[lockedX][lockedY].equals(handler.getPlayboard().getFields()[mouseOnFieldX][mouseOnFieldY]))
         if(handler.getPlayboard().getFields()[lockedX][lockedY].isPieceOnField())//second step has a Piece on the square
@@ -100,9 +146,11 @@ public void checksForPieceMove(){//first step check for left click on another lo
        return  piece.pieceMoveAndCaptureRule(mouseOnFieldX, mouseOnFieldY,handler.getPlayboard().getFields() );   
         
   }
-  private void movePiece(Field theSquare){//figur von feld nehmen, figur auf neues feld stellen, die cordinaten der figur ändern
+  private void movePiece(Field theSquare){//moving piece from one square to another old piece gets deleted
+     if(positionBlackKing==null||positionWhiteKing==null)//init of king position
+         this.setKingPositions();
      
-      
+    
       
      ChessPiece tmp= theSquare.getPieceOnField();
      if(currentTurn==TURN_WHITE_PLAYER&&tmp.getColor()==PieceColor.WHITE)
@@ -110,27 +158,105 @@ public void checksForPieceMove(){//first step check for left click on another lo
      else if(currentTurn==TURN_BLACK_PLAYER&&tmp.getColor()==PieceColor.BLACK)
      currentTurn=TURN_WHITE_PLAYER;
      else return;
-     
+     //special case casteling of a king and a rook
+     if(tmp instanceof Rook)
+         if(((Rook) tmp).isCasteling(mouseOnFieldX,mouseOnFieldY,handler.getPlayboard().getFields()))
+         {
+             locked=false;
+            
+            try{Thread.sleep(200);} //short sleep so the left click is not geting recognized as another click again /human speed/
+            catch(InterruptedException ex){Thread.currentThread().interrupt();}     
+        
+             return;
+         }
     
      
      
-     tmp.setFirstMove(false);
+    //normal move 
      theSquare.setPiece(null);
      tmp.moveTo(mouseOnFieldX*handler.getFieldWidth(),mouseOnFieldY*handler.getFieldHeight());
      
      handler.getPlayboard().getFields()[mouseOnFieldX][mouseOnFieldY].setPiece(tmp);
      tmp=handler.getPlayboard().getFields()[mouseOnFieldX][mouseOnFieldY].getPieceOnField();
-     locked=false;
-            
+     
+     //specieal case for pawn romotion
+     if(tmp instanceof Pawn)
+     {
+         if(((Pawn) tmp).isPromoteable())
+         {
+           System.out.println("Promotable Piece");
+           promotablePiece=new Point(mouseOnFieldX,mouseOnFieldY);
+             
+         }
+     }
+     if(tmp instanceof King)
+     {
+         this.setKingPositions();
+     }
+     this.setAnyKingInCheck();
+      locked=false;      
         try{Thread.sleep(200);} //short sleep so the left click is not geting recognized as another click again /human speed/
         catch(InterruptedException ex){Thread.currentThread().interrupt();}     
         }
      
 
 
-private void check()
-{
-    
-}
-  
+    private void setAnyKingInCheck()
+   {//gives the cordinates of whiteKing to every black piece as moving Option and checks if it is a legit move for the piece if it is then the white king is in check
+    //same for black king    
+       for(int y=0;y<handler.getFieldCount();y++)
+       {
+           for(int x=0;x<handler.getFieldCount();x++)
+           {
+             if(handler.getPlayboard().getFields()[y][x].getPieceOnField()!=null&&positionBlackKing!=null
+                       &&handler.getPlayboard().getFields()[y][x].getPieceOnField().getColor()==PieceColor.WHITE){
+                       if(handler.getPlayboard().getFields()[y][x].getPieceOnField().pieceMoveAndCaptureRule(
+                        (int)positionBlackKing.getX(),(int) positionBlackKing.getY(),handler.getPlayboard().getFields())) 
+                       {blackKingInCheck=true;//if any piece sets black king in check we leave the function
+                        return;
+                       }
+             }
+             if(handler.getPlayboard().getFields()[y][x].getPieceOnField()!=null&&positionWhiteKing!=null
+                       &&handler.getPlayboard().getFields()[y][x].getPieceOnField().getColor()==PieceColor.BLACK)
+                       if(handler.getPlayboard().getFields()[y][x].getPieceOnField().pieceMoveAndCaptureRule(
+                        (int) positionWhiteKing.getX(),(int) positionWhiteKing.getY(),handler.getPlayboard().getFields() ))
+                       {whiteKingInCheck=true;//same as for black king in case any piece sets the king in check we leave the function
+                       return;
+                       }
+           }
+       }
+       blackKingInCheck=whiteKingInCheck=false;//if the for loops run trough and find no piece sets any king in check set to false
+       
+    }
+    private void setKingPositions(){
+         for(int y=0;y<handler.getFieldCount();y++)
+       {
+           for(int x=0;x<handler.getFieldCount();x++)
+           {
+               
+               if(handler.getPlayboard().getFields()[x][y].getPieceOnField()!=null
+                       &&handler.getPlayboard().getFields()[x][y].getPieceOnField() instanceof King)
+                       {
+                           if(handler.getPlayboard().getFields()[x][y].getPieceOnField().getColor()==PieceColor.BLACK)
+                           {   positionBlackKing=new Point(x,y);
+                           System.out.println("Black king set to "+x+"=x "+y+"=y");}
+                           if(handler.getPlayboard().getFields()[x][y].getPieceOnField().getColor()==PieceColor.WHITE)
+                           {  positionWhiteKing=new Point(x,y);
+                           System.out.println("White king set to "+x+"=x "+y+"=y");}
+                       }
+           }
+       }
+         
+    }
+    private void promote()
+    {
+        PiecesFactory factory=new PiecesFactory();
+        ChessPiece pieceToPromote=handler.getPlayboard().getFields()[promotablePiece.x][promotablePiece.y].getPieceOnField();
+        ChessPiece promotedPiece=factory.promotePiece(pieceToPromote);
+        handler.getPlayboard().getFields()[promotablePiece.x][promotablePiece.y].setPiece(promotedPiece);
+    System.out.println("Piece have been promoted!");
+    try{Thread.sleep(200);} //short sleep so the left click is not geting recognized as another click again /human speed/
+        catch(InterruptedException ex){Thread.currentThread().interrupt();}
+    }
+
 }
